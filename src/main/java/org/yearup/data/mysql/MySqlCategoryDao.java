@@ -1,0 +1,125 @@
+package org.yearup.data.mysql;
+
+import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.support.StandardMultipartHttpServletRequest;
+import org.yearup.data.CategoryDao;
+import org.yearup.models.Category;
+
+import javax.sql.DataSource;
+import javax.sql.StatementEvent;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+
+@Component
+public class MySqlCategoryDao extends MySqlDaoBase implements CategoryDao {
+    public MySqlCategoryDao(DataSource dataSource) {
+        super(dataSource);
+    }
+    @Override
+    public List<Category> getAllCategories() {
+        // get all categories
+        List<Category> categories = new ArrayList<>();
+        String sql = "SELECT category_id, name, description FROM  categories ORDER BY category_id";
+        try (Connection connection = getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet row = statement.executeQuery()) {
+            while (row.next()) {
+                categories.add(mapRow(row));
+            }
+        }
+        catch (SQLException e) {
+            throw new RuntimeException("ERROR getting all categories", e);
+        }
+        return categories;
+    }
+    @Override
+    public Category getById(int categoryId) {
+        // get category by id
+        String sql = "SELECT category_id, name, description FROM categories WHERE category_id = ?";
+        try (Connection connection = getConnection();
+             PreparedStatement statement = getConnection().prepareStatement(sql)) {
+        statement.setInt(1, categoryId);
+        try (ResultSet row = statement.executeQuery()) {
+            if (row.next()) {
+                return mapRow(row);
+            }
+        }
+    }
+        catch (SQLException e) {
+            throw new RuntimeException("ERROR getting category by id: " + categoryId, e);
+        }
+        return null;
+    }
+
+    @Override
+    public Category create(Category category)
+    {
+        // create a new category
+        String sql = "INSERT INTO categories (names, description) VALUES (?, ?)";
+        try(Connection connection = getConnection();
+            PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS))
+        {
+            statement.setString(1, category.getName());
+            statement.setString(2, category.getDescription());
+            statement.executeUpdate();
+            try(ResultSet keys = statement.getGeneratedKeys())
+            {
+                if(keys.next())
+                {
+                    int newId = keys.getInt(1);
+                    category.setCategoryId(newId);
+                }
+            }
+            return category;
+        }
+        catch (SQLException e)
+        {
+            throw new RuntimeException("ERROR creating category", e);
+        }
+    }
+    @Override
+    public void update(int categoryId, Category category)
+    {
+        // update category
+        String sql = "UPDATE categories SET name = ?, description = ? WHERE category_id = ?";
+        try (Connection connection = getConnection());
+             PreparedStatement statement = connection.prepareStatement(sql))
+        {
+            statement.setString(1, category.getName());
+            statement.setString(2, category.getDescription());
+            statement.setInt(3, categoryId);
+            statement.executeUpdate();
+        }
+        catch(SQLException e)
+        {
+            throw new RuntimeException("ERROR updating category id: " + categoryId, e);
+        }
+    }
+    @Override
+    public void delete(int categoryId)
+    {
+        // delete category
+    }
+
+    private Category mapRow(ResultSet row) throws SQLException
+    {
+        int categoryId = row.getInt("category_id");
+        String name = row.getString("name");
+        String description = row.getString("description");
+
+        Category category = new Category()
+        {{
+            setCategoryId(categoryId);
+            setName(name);
+            setDescription(description);
+        }};
+
+        return category;
+    }
+
+}
