@@ -21,20 +21,27 @@ public class MySqlCategoryDao extends MySqlDaoBase implements CategoryDao {
         super(dataSource);
     }
     @Override
-    public List<Category> getAllCategories() {
+    public List<Category> getAllCategories()
+    {
         // get all categories
+        String sql = "SELECT * FROM categories;";
         List<Category> categories = new ArrayList<>();
-        String sql = "SELECT category_id, name, description FROM  categories ORDER BY category_id";
-        try (Connection connection = getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql);
-             ResultSet row = statement.executeQuery()) {
-            while (row.next()) {
-                categories.add(mapRow(row));
+        try (Connection connection = getConnection())
+        {
+            PreparedStatement statement = connection.prepareStatement(sql);
+            ResultSet row = statement.executeQuery();
+
+            while (row.next())
+            {
+                Category category = mapRow(row);
+                categories.add(category);
             }
         }
-        catch (SQLException e) {
-            throw new RuntimeException("ERROR getting all categories", e);
+        catch (SQLException e)
+        {
+            throw new RuntimeException(e);
         }
+
         return categories;
     }
     @Override
@@ -42,7 +49,7 @@ public class MySqlCategoryDao extends MySqlDaoBase implements CategoryDao {
         // get category by id
         String sql = "SELECT category_id, name, description FROM categories WHERE category_id = ?";
         try (Connection connection = getConnection();
-             PreparedStatement statement = getConnection().prepareStatement(sql)) {
+             PreparedStatement statement = connection.prepareStatement(sql)) {
         statement.setInt(1, categoryId);
         try (ResultSet row = statement.executeQuery()) {
             if (row.next()) {
@@ -60,7 +67,7 @@ public class MySqlCategoryDao extends MySqlDaoBase implements CategoryDao {
     public Category create(Category category)
     {
         // create a new category
-        String sql = "INSERT INTO categories (names, description) VALUES (?, ?)";
+        String sql = "INSERT INTO categories (name, description) VALUES (?, ?)";
         try(Connection connection = getConnection();
             PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS))
         {
@@ -87,7 +94,7 @@ public class MySqlCategoryDao extends MySqlDaoBase implements CategoryDao {
     {
         // update category
         String sql = "UPDATE categories SET name = ?, description = ? WHERE category_id = ?";
-        try (Connection connection = getConnection());
+        try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(sql))
         {
             statement.setString(1, category.getName());
@@ -99,27 +106,31 @@ public class MySqlCategoryDao extends MySqlDaoBase implements CategoryDao {
         {
             throw new RuntimeException("ERROR updating category id: " + categoryId, e);
         }
-    }
+     }
     @Override
-    public void delete(int categoryId)
-    {
+    public void delete(int categoryId) {
         // delete category
+        String sql = "DELETE FROM categories WHERE category_id = ?";
+        try (Connection connection = getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, categoryId);
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("ERROR deleting category id: " + categoryId, e);
+        }
     }
+        private Category mapRow (ResultSet row) throws SQLException
+        {
+            int categoryId = row.getInt("category_id");
+            String name = row.getString("name");
+            String description = row.getString("description");
 
-    private Category mapRow(ResultSet row) throws SQLException
-    {
-        int categoryId = row.getInt("category_id");
-        String name = row.getString("name");
-        String description = row.getString("description");
+            Category category = new Category() {{
+                setCategoryId(categoryId);
+                setName(name);
+                setDescription(description);
+            }};
 
-        Category category = new Category()
-        {{
-            setCategoryId(categoryId);
-            setName(name);
-            setDescription(description);
-        }};
-
-        return category;
-    }
-
+            return category;
+        }
 }

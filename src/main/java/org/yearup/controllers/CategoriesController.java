@@ -1,8 +1,6 @@
 package org.yearup.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Role;
-import org.springframework.jdbc.support.incrementer.AbstractDataFieldMaxValueIncrementer;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.yearup.data.CategoryDao;
@@ -15,14 +13,14 @@ import java.util.List;
 // add the annotations to make this a REST controller
 @RestController
 // add the annotation to make this controller the endpoint for the following url
-@RequestMapping("/categories")
+@RequestMapping("categories")
     // http://localhost:8080/categories
 // add annotation to allow cross site origin requests
 @CrossOrigin
 public class CategoriesController
 {
-    private CategoryDao categoryDao;
-    private ProductDao productDao;
+    private  CategoryDao categoryDao;
+    private  ProductDao productDao;
 
 
     // create an Autowired controller to inject the categoryDao and ProductDao
@@ -54,13 +52,13 @@ public class CategoriesController
     public List<Product> getProductsById(@PathVariable int categoryId)
     {
         // get a list of product by categoryId
-        return productDao.getByCategoryId(categoryId);
+        return productDao.listByCategoryId(categoryId);
     }
 
     // add annotation to call this method for a POST action
     @PostMapping
     // add annotation to ensure that only an ADMIN can call this function
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public Category addCategory(@RequestBody Category category)
     {
         // insert the category
@@ -70,7 +68,7 @@ public class CategoriesController
     // add annotation to call this method for a PUT (update) action - the url path must include the categoryId
     @PutMapping("/{id}")
     // add annotation to ensure that only an ADMIN can call this function
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public void updateCategory(@PathVariable int id, @RequestBody Category category)
     {
         // update the category by id
@@ -81,7 +79,7 @@ public class CategoriesController
     // add annotation to call this method for a DELETE action - the url path must include the categoryId
     @DeleteMapping("/{id}")
     // add annotation to ensure that only an ADMIN can call this function
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public void deleteCategory(@PathVariable int id)
     {
         // delete the category by id
