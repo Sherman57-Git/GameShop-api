@@ -81,7 +81,7 @@ public class ProductsController
     {
         try
         {
-            productDao.create(product);
+            productDao.update(id,product);
         }
         catch(Exception ex)
         {
@@ -102,7 +102,7 @@ public class ProductsController
 
             productDao.delete(id);
         }
-        catch(Exception ex)
+        catch(Exception e)
         {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Oops... our bad.");
         }
